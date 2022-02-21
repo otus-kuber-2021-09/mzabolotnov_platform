@@ -1,5 +1,128 @@
 # mzabolotnov_platform
 mzabolotnov Platform repository
+
+<details>
+<summary> <b>HW №9 Сервисы централизованного логирования для компонентов Kubernetes и приложений (kubernetes-logging) </b></summary>
+
+ДЗ выполнено согласно kubernetes-logging/HW_k8s_logging_23186_adfb6c-227996-86f0ec.pdf
+
+Задание выполняем в кластере Yandex Cloud
+Кластер разворачиваем при помощи terraform. Кластер состоит из двух групп узлов default-pool и infra-pool.
+
+Defaul-pool - состоит из одной ноды (cores-2, memory-2), будет использована для разворачивания самого приложения Hipster Shop.
+Infra-pool - состоит из трех нод (cores-2, memory-4), будет использована для разворачивания инфраструктуры логирования.
+
+Задаем taint нодам в группе infra-pool
+
+$ kubectl get nodes
+NAME                        STATUS   ROLES    AGE   VERSION
+cl197h166i1chf94fk6a-eweb   Ready    <none>   35h   v1.19.15
+cl197h166i1chf94fk6a-unas   Ready    <none>   35h   v1.19.15
+cl197h166i1chf94fk6a-utev   Ready    <none>   35h   v1.19.15
+cl1hnr8p459ndrnomg1f-eqav   Ready    <none>   35h   v1.19.15
+
+```
+kubectl taint nodes cl197h166i1chf94fk6a-eweb node-role=infra:NoSchedule
+
+```
+<details>
+<summary><b>Разворачиваем приложение Hipster Shop</b></summary>
+
+```
+kubectl create ns microservices-demo
+kubectl apply -f https://raw.githubusercontent.com/express42/otus-platform-snippets/master/Module-02/Logging/microservices-demo-without-resources.yaml -n microservices-demo
+
+```
+получаем
+
+```
+kubectl get pods -n microservices-demo -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName
+```
+
+NAME                                     NODE
+adservice-56d56d89cc-4dzvx               cl1hnr8p459ndrnomg1f-eqav
+cartservice-c8b9fc586-9zx89              cl1hnr8p459ndrnomg1f-eqav
+checkoutservice-74f4c5464f-ts6zl         cl1hnr8p459ndrnomg1f-eqav
+currencyservice-7df4d74b7c-hj742         cl1hnr8p459ndrnomg1f-eqav
+emailservice-86794489df-nxxdr            cl1hnr8p459ndrnomg1f-eqav
+frontend-cf49f7975-9flql                 cl1hnr8p459ndrnomg1f-eqav
+loadgenerator-7fdb874b-k9sp2             cl1hnr8p459ndrnomg1f-eqav
+paymentservice-5768d9bb67-hfw74          cl1hnr8p459ndrnomg1f-eqav
+productcatalogservice-84fd74ccc9-rgz56   cl1hnr8p459ndrnomg1f-eqav
+recommendationservice-6fcb597467-qbmnl   cl1hnr8p459ndrnomg1f-eqav
+redis-cart-55d76945cb-nns6h              cl1hnr8p459ndrnomg1f-eqav
+shippingservice-6bc75ffff-ht2lt          cl1hnr8p459ndrnomg1f-eqav
+</details>
+
+
+<details>
+<summary><b>Разворачиваем EFK stack</b></summary>
+
+1. Добавляем репозиторий
+```
+helm repo add elastic https://helm.elastic.co
+```
+сохраняем values.yaml
+'''
+helm show values elastic/elasticsearch  > values.yaml
+'''
+Кастомизируем установку:
+```
+kubernetes-logging/elasticsearch.values.yaml
+```
+```
+kubectl create ns observability
+helm upgrade --install elasticsearch elastic/elasticsearch --namespace observability -f elasticsearch.values.yaml
+```
+В результате имеем
+```
+kubectl get pods -n observability -l chart=elasticsearch -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName
+```
+NAME                     NODE
+elasticsearch-master-0   cl197h166i1chf94fk6a-unas
+elasticsearch-master-1   cl197h166i1chf94fk6a-utev
+elasticsearch-master-2   cl197h166i1chf94fk6a-eweb
+</details>
+
+2. [Разворачиваем ingress-controler в Yandex Cloud](https://cloud.yandex.ru/docs/managed-kubernetes/solutions/ingress-cert-manager) на каждой ноде infra-pool по аналогии с elasticsearch. Единственное отличие, разворачиваем как DaemonSet. Кастомизируем nginx-ingress-controler.values.yaml
+
+```
+kubectl create ns nginx-ingress
+helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace nginx-ingress -f nginx-ingress-controler.values.yaml
+```
+```
+kubectl get pods -n nginx-ingress -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName
+```
+ingress-nginx-controller-4w97g   cl197h166i1chf94fk6a-eweb
+ingress-nginx-controller-jg9hw   cl197h166i1chf94fk6a-utev
+ingress-nginx-controller-p4tjh   cl197h166i1chf94fk6a-unas
+
+3. По аналогии устанавливаем Kibana
+
+```
+helm upgrade --install kibana elastic/kibana --namespace observability -f kibana.values.yaml
+
+kubectl get pods -n observability -l app=kibana -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName
+```
+NAME                             NODE
+kibana-kibana-68cd8c9c8f-9w294   cl197h166i1chf94fk6a-unas
+kibana-kibana-68cd8c9c8f-ctjd4   cl197h166i1chf94fk6a-utev
+kibana-kibana-68cd8c9c8f-sgznn   cl197h166i1chf94fk6a-eweb
+
+
+
+<details>
+<summary><b></b></summary>
+</details>
+
+<details>
+<summary><b></b></summary>
+</details>
+
+
+
+</details>
+
 <details>
 <summary> <b>HW №8 Мониторинг сервиса в кластере k8s (kubernetes-monitoring) </b></summary>
 
@@ -55,6 +178,35 @@ kubectl apply -f kubernetes-monitoring/servicemonitor.yaml
 ![Screenshot_2021-11-28_20-47-05](https://user-images.githubusercontent.com/80415069/143781729-cae00c93-1137-4b96-9f66-2d79d7a68582.png)
 
 </details>
+
+</details>
+
+<details>
+<summary> <b>HW №7 Операторы,CustomResourceDefinition </b></summary>
+- [x] Основное ДЗ
+Задание выполнялось согласно инструкции kubernetes-operators/Домашнее_задание._Custom_Resource_Definitions._Operatorsv2_15052_19ab0f1_15052_c749da_15052_966268-191527-7259aa.pdf
+Используется кластер minikube
+
+#### <b>Создание CustomResurce</b>
+Создаем CustomResurce
+```
+kubernetes-operators/deploy/cr.yml
+```
+Чтобы развернуть его в облаке создаем его описание.
+```
+kubernetes-operators/deploy/crd.yml
+```
+в crd.yml добавляем секцию validation для валидации CustomResurce.
+Чтобы валидация работала, добавляем
+```
+preserveUnknownFields: false
+```
+Задаем обязательные поля в CustomResurce
+```
+required: ["image", "database", "password", "storage_size"]          
+
+```
+
 
 </details>
 
