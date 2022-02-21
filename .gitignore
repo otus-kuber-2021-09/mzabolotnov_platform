@@ -1,0 +1,8 @@
+kubernetes-templating/terraform/.terraform.lock.hcl
+kubernetes-templating/terraform/terraform.tfstate
+kubernetes-templating/terraform/terraform.tfstate.backup
+kubernetes-templating/terraform/terraform.tfvars
+kubernetes-templating/terraform/.terraform/providers/registry.terraform.io/yandex-cloud/yandex/0.66.0/linux_amd64/CHANGELOG.md
+kubernetes-templating/terraform/.terraform/providers/registry.terraform.io/yandex-cloud/yandex/0.66.0/linux_amd64/LICENSE
+kubernetes-templating/terraform/.terraform/providers/registry.terraform.io/yandex-cloud/yandex/0.66.0/linux_amd64/README.md
+kubernetes-templating/terraform/.terraform/providers/registry.terraform.io/yandex-cloud/yandex/0.66.0/linux_amd64/terraform-provider-yandex_v0.66.0
