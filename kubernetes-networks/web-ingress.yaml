@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    kubernetes.io/ingress.allow-http: "false"
+spec:
+  rules:
+  - host: 172.17.255.2.nip.io
+    http:
+      paths:
+      - path: /web
+        pathType: Prefix
+        backend:
+         service:
+          name : web-svc
+          port:
+           number: 8000
