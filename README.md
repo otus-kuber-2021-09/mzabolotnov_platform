@@ -182,6 +182,36 @@ kubectl apply -f kubernetes-monitoring/servicemonitor.yaml
 
 </details>
 
+
+<details>
+<summary> <b>HW №7 Операторы,CustomResourceDefinition </b></summary>
+- [x] Основное ДЗ
+Задание выполнялось согласно инструкции kubernetes-operators/Домашнее_задание._Custom_Resource_Definitions._Operatorsv2_15052_19ab0f1_15052_c749da_15052_966268-191527-7259aa.pdf
+Используется кластер minikube
+
+#### <b>Создание CustomResurce</b>
+Создаем CustomResurce
+```
+kubernetes-operators/deploy/cr.yml
+```
+Чтобы развернуть его в облаке создаем его описание.
+```
+kubernetes-operators/deploy/crd.yml
+```
+в crd.yml добавляем секцию validation для валидации CustomResurce.
+Чтобы валидация работала, добавляем
+```
+preserveUnknownFields: false
+```
+Задаем обязательные поля в CustomResurce
+```
+required: ["image", "database", "password", "storage_size"]          
+
+```
+
+
+</details>
+
 <details>
 <summary> <b>HW №6 Шаблонизация манифестов Kubernetes. (kubernetes-templating) </b></summary>
 
