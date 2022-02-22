@@ -1,7 +1,5 @@
 # mzabolotnov_platform
 mzabolotnov Platform repository
-# mzabolotnov_platform
-mzabolotnov Platform repository
 
 <details>
 <summary> <b>HW №9 Сервисы централизованного логирования для компонентов Kubernetes и приложений (kubernetes-logging) </b></summary>
@@ -125,7 +123,6 @@ kibana-kibana-68cd8c9c8f-sgznn   cl197h166i1chf94fk6a-eweb
 
 </details>
 
-
 <details>
 <summary> <b>HW №8 Мониторинг сервиса в кластере k8s (kubernetes-monitoring) </b></summary>
 
@@ -183,7 +180,6 @@ kubectl apply -f kubernetes-monitoring/servicemonitor.yaml
 </details>
 
 </details>
-
 
 <details>
 <summary> <b>HW №7 Операторы,CustomResourceDefinition </b></summary>
