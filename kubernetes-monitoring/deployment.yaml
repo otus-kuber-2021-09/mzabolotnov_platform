@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+data:
+  metrics.conf: |
+    server{
+    listen       8080;
+    server_name  localhost;
+    location = /basic_status {
+        stub_status;
+    }
+           }
+  default.conf: |
+    server {
+    listen       80;
+    listen  [::]:80;
+    server_name  localhost;
+
+
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+            }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+   app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        # image: mzabolotnov/ex_nginx:4.1
+        image: nginx:latest
+        ports:
+        - name: nginx-port
+          containerPort: 80
+          protocol: TCP
+        - name: nginx-m-port
+          containerPort: 8080
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /etc/nginx/conf.d # mount nginx-conf volumn to /etc/nginx/conf.d
+          readOnly: true
+          name: nginx-conf
+        livenessProbe:
+          tcpSocket:
+            port: nginx-port
+        readinessProbe:
+          httpGet:
+            path: /index.html
+            port: nginx-port
+          httpGet:
+            path: /basic_status
+            port: nginx-m-port
+      - name: nginx-exporter
+        image: nginx/nginx-prometheus-exporter:latest
+        ports:
+        - name: nginx-ex-port
+          containerPort: 9113
+        args:
+          - -nginx.scrape-uri=http://localhost:8080/basic_status
+      volumes:
+      - name: nginx-conf
+        configMap:
+          name: nginx-conf # place ConfigMap `nginx-conf` on /etc/nginx/conf.d
+          items:
+            - key: metrics.conf
+              path: metrics.conf
+            - key: default.conf
+              path: default.conf
